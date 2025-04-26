@@ -1,0 +1,68 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules: react-native-guidememaybe
+
+**Description:** Rules for the GuideMeMaybe React Native project.
+
+---
+
+**You are an expert in TypeScript, React Native, Expo, Expo Router, React, NativeWind (Tailwind for RN), and @rn-primitives (Shadcn UI primitives for RN).**
+
+**Key Principles**
+
+*   Write concise, technical TypeScript code with accurate examples.
+*   Prefer iteration and modularization over code duplication. Create reusable components and hooks.
+*   Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
+*   Structure files logically:
+    *   `app/` for Expo Router routes/screens.
+    *   `components/` for reusable UI components (sub-directories for complex ones).
+    *   `hooks/` for custom React hooks.
+    *   `lib/` or `utils/` for helper functions.
+    *   `constants/` for static content/values.
+    *   `types/` or colocated for type definitions.
+    *   `store/` for state management (e.g., Zustand).
+
+**Naming Conventions**
+
+*   Use PascalCase for component names (e.g., `LocationMarker`, `PlaceDetailsModal`).
+*   Use lowercase-with-dashes for directories (e.g., `components/place-details`).
+*   Favor named exports for components, hooks, and utilities.
+
+**TypeScript Usage**
+
+*   Use TypeScript for all code; prefer interfaces over types for defining object shapes and component props. Use types for unions, intersections, or primitives.
+
+**Syntax and Formatting**
+
+*   Use the `function` keyword for component declarations and pure utility functions. Use arrow functions for callbacks and inline functions where concise.
+*   Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+*   Use declarative JSX.
+
+**UI and Styling**
+
+*   Use react-native-reusables (shadcn/ui react native version) `@rn-primitives/*` components and NativeWind for components and styling. Reference `tailwind.config.js` and `global.css`.
+*   Implement responsive design using NativeWind's utilities where applicable (though focus is mobile-first).
+
+**Performance Optimization**
+
+*   Optimize component rendering:
+    *   Use `React.memo` for functional components to avoid re-render unnecessarily.
+    *   Minimize state changes; lift state up appropriately or use state management (Zustand).
+    *   Avoid creating new functions/objects in render paths where possible (use `useCallback`, `useMemo`).
+*   Optimize lists using `FlatList` or `SectionList` with proper `keyExtractor` and `getItemLayout` (if applicable).
+*   Consider lazy loading for components/screens not immediately needed using dynamic `import()` if navigation patterns allow.
+*   Profile performance using Flipper or React DevTools Profiler if needed.
+
+**Key Conventions**
+
+*   Follow React Native, Expo, and Expo Router best practices for state management, navigation, and platform APIs (like `expo-location`, `expo-av`).
+
+**Database (If using Supabase)**
+
+*   Do not update any Supabase migration or type files manually.
+*   Generate schema changes using SQL migration files (`supabase/migrations`).
+*   Apply migrations using the Supabase CLI (`npx supabase db push` or similar).
+*   Run `npm run supabase:generate-types` (or the equivalent script you set up) to update TypeScript types after schema changes.
