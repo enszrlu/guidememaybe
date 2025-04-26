@@ -9,9 +9,12 @@
 **Frontend**
 
 - React Native (with Expo)
+- Expo Router for navigation and routing
+- NativeWind for Tailwind CSS styling
+- react-native-reusables (@rn-primitives) for UI component primitives (Shadcn UI for react native)
 - react-native-maps for interactive maps
 - expo-location for geolocation
-- react-navigation for screen modals and navigation
+- react-navigation for screen modals and navigation (used by Expo Router)
 - react-native-voice or Expo Audio APIs for speech-to-text
 - expo-av for voice playback
 
@@ -20,7 +23,7 @@
 - Node.js (Express or Serverless via Vercel/Firebase)
 - **OpenAI GPT-4 API for both text generation and audio synthesis (TTS)**
 - Google Custom Search API or Serper.dev for real-time web content
-- Supabase or Firebase for storing place data (optional for dynamic expansion)
+- Supabase for database and backend services (e.g., storing place data)
 
 **Step-by-Step User Journey (MVP)**
 
@@ -31,13 +34,13 @@
 - Allow users to manually change language in settings
 - Store user's preferred language choice locally (AsyncStorage or SecureStore)
 
-**1\. App Opens → Map Centered on User’s Location**
+**1\. App Opens → Map Centered on User's Location**
 
 **Flow:**
 
 - Request location permissions
 - Fetch current coordinates
-- Display user’s position as a blue dot
+- Display user's position as a blue dot
 - Fetch and render touristic locations nearby as markers
 
 **Data structure for location markers:**
@@ -78,9 +81,9 @@
   - Short label/type (Castle, Museum, Historic Site)
   - "More Info" button
 
-**3\. Taps “More Info” → Place Details Page**
+**3\. Taps "More Info" → Place Details Page**
 
-**Audio Guide Selection (New Feature)**
+**Audio Guide Selection**
 
 - Users can select a version of the guide before listening:
   - "🎧 Brief Summary" (30–45 seconds, ~100–150 words)
@@ -89,13 +92,12 @@
 - The audio player UI includes:
   - Title of the selected version (e.g., "Brief Summary")
   - 🔊 Play / pause / replay controls
-  - Button group to switch between "Brief" and "In-Depth" versions
+  - Switch to change between "Brief" and "In-Depth" versions
 
 **Backend API Call Example for Audio Guide Versions:**
 
-- GET /api/place-audio-guide?placeId=location-001&type=brief&lang=en
+- GET /api/place-audio-guide?placeId=location-001&type=brief&lang=en from backend server.
 - Server uses GPT-4 and OpenAI /v1/audio/speech with specific prompt:
-
 Please generate a \[brief/in-depth\] spoken guide for \[PLACE_NAME\] in \[LANGUAGE\]. The tone should be informative, engaging, and appropriate for a mobile travel app.
 
 - Server returns:
@@ -111,11 +113,11 @@ Please generate a \[brief/in-depth\] spoken guide for \[PLACE_NAME\] in \[LANGUA
   - 📷 Full image gallery (carousel or scrollable)
   - 🧠 AI-generated summary (max 3 short paragraphs)
   - Predefined question buttons:
-    - “What’s the history of this place?”
-    - “Is it open today?”
-    - “Any cool facts?”
-    - “Who built it?”
-    - “What else is nearby?”
+    - "What's the history of this place?"
+    - "Is it open today?"
+    - "Any cool facts?"
+    - "Who built it?"
+    - "What else is nearby?"
   - Text input and microphone icon for free-form questions
 
 **Backend API Call Example:**
@@ -128,7 +130,7 @@ Please generate a \[brief/in-depth\] spoken guide for \[PLACE_NAME\] in \[LANGUA
 Summarise recent and historical information about Big Ben in English. Include only facts that are verifiable from current reliable sources.
 
 - 1. Translate if needed
-  2. Use OpenAI’s /v1/audio/speech API to generate an MP3 audio response of the summary
+  2. Use OpenAI's /v1/audio/speech API to generate an MP3 audio response of the summary
   3. Return a structured response:
   4. {
   5. "summary": "Big Ben, completed in 1859, is the nickname for the Great Bell in the Elizabeth Tower at the north end of the Palace of Westminster in London. It is one of the most prominent symbols of the United Kingdom...",
@@ -143,9 +145,9 @@ Summarise recent and historical information about Big Ben in English. Include on
 
 - Display response as a scrollable text block
 - Embed a playable voice button:
-  - TTS audio generated directly using OpenAI’s TTS API
+  - TTS audio generated directly using OpenAI's TTS API
   - Voice options: alloy, echo, fable, onyx, nova, shimmer
-- “🔊 Replay” and “👍 Was this helpful?” buttons under response
+- "🔊 Replay" and "👍 Was this helpful?" buttons under response
 
 **5\. User Can Continue Exploring**
 
@@ -157,7 +159,7 @@ Summarise recent and historical information about Big Ben in English. Include on
 
 **Example: Tower of London**
 
-- What’s the history of this place?
+- What's the history of this place?
 - What famous events happened here?
 - Who lived here?
 - Why was it built?
@@ -168,15 +170,15 @@ Summarise recent and historical information about Big Ben in English. Include on
 **Sample User Flow (Narrative)**
 
 1. Alice opens the app in London → gives location permission
-2. The map loads centered on Alice’s GPS
-3. She sees pins for “Tower of London,” “Big Ben,” and “The Shard”
-4. She taps the “Tower of London” pin
-5. A preview card slides up with 3 photos and a “More Info” button
-6. Taps “More Info” → a modal opens:
+2. The map loads centered on Alice's GPS
+3. She sees pins for "Tower of London," "Big Ben," and "The Shard"
+4. She taps the "Tower of London" pin
+5. A preview card slides up with 3 photos and a "More Info" button
+6. Taps "More Info" → a modal opens:
     - Audio guide options load (Brief or In-Depth)
     - AI-generated summary loads
     - Alice selects "Brief Summary" and listens as she looks at the tower of london
-    - Buttons like “What’s the history?” are available
-    - Alice taps “Any dark facts?” → AI responds
+    - Buttons like "What's the history?" are available
+    - Alice taps "Any dark facts?" → AI responds
     - Audio autoplays, she listens while continuing her walk
 7. She closes the modal → back to exploring on the map
