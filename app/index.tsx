@@ -1,95 +1,212 @@
-import * as React from 'react';
-import { View } from 'react-native';
-import Animated, { FadeInUp, FadeOutDown, LayoutAnimationConfig } from 'react-native-reanimated';
-import { Info } from '~/lib/icons/Info';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Button } from '~/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card';
-import { Progress } from '~/components/ui/progress';
-import { Text } from '~/components/ui/text';
-import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import React, { useState, useEffect, useRef } from "react";
+import { View, StyleSheet, Alert, Text, ActivityIndicator } from "react-native";
+import * as Location from "expo-location";
+import Mapbox from "@rnmapbox/maps";
+import { Position } from "geojson";
 
-const GITHUB_AVATAR_URI =
-  'https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg';
+const LONDON_LANDMARKS = [
+    {
+        id: "tower-of-london",
+        title: "Tower of London",
+        coordinate: [-0.0759, 51.5081] as Position,
+    },
+    {
+        id: "tate-modern",
+        title: "Tate Modern",
+        coordinate: [-0.0995, 51.5076] as Position,
+    },
+    {
+        id: "tower-bridge",
+        title: "Tower Bridge",
+        coordinate: [-0.0754, 51.5055] as Position,
+    },
+];
+
+const INITIAL_CENTER_COORDINATE: Position = [-0.08, 51.507]; // Near center of landmarks
 
 export default function Screen() {
-  const [progress, setProgress] = React.useState(78);
+    const [userLocation, setUserLocation] = useState<Position | null>(null);
+    const [locationError, setLocationError] = useState<string | null>(null);
+    const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+    const mapRef = useRef<Mapbox.MapView>(null);
+    const cameraRef = useRef<Mapbox.Camera>(null);
 
-  function updateProgressValue() {
-    setProgress(Math.floor(Math.random() * 100));
-  }
-  return (
-    <View className='flex-1 justify-center items-center gap-5 p-6 bg-secondary/30'>
-      <Card className='w-full max-w-sm p-6 rounded-2xl'>
-        <CardHeader className='items-center'>
-          <Avatar alt="Rick Sanchez's Avatar" className='w-24 h-24'>
-            <AvatarImage source={{ uri: GITHUB_AVATAR_URI }} />
-            <AvatarFallback>
-              <Text>RS</Text>
-            </AvatarFallback>
-          </Avatar>
-          <View className='p-3' />
-          <CardTitle className='pb-2 text-center'>Rick Sanchez</CardTitle>
-          <View className='flex-row'>
-            <CardDescription className='text-base font-semibold'>Scientist</CardDescription>
-            <Tooltip delayDuration={150}>
-              <TooltipTrigger className='px-2 pb-0.5 active:opacity-50'>
-                <Info size={14} strokeWidth={2.5} className='w-4 h-4 text-foreground/70' />
-              </TooltipTrigger>
-              <TooltipContent className='py-2 px-4 shadow'>
-                <Text className='native:text-lg'>Freelance</Text>
-              </TooltipContent>
-            </Tooltip>
-          </View>
-        </CardHeader>
-        <CardContent>
-          <View className='flex-row justify-around gap-3'>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Dimension</Text>
-              <Text className='text-xl font-semibold'>C-137</Text>
+    useEffect(() => {
+        (async () => {
+            console.log("Requesting location permissions...");
+            const { status } =
+                await Location.requestForegroundPermissionsAsync();
+            console.log("Permission status:", status);
+
+            if (status !== "granted") {
+                setLocationError("Permission to access location was denied");
+                setIsLoadingLocation(false);
+                Alert.alert(
+                    "Location Permission Denied",
+                    "Please enable location services to see your current location on the map."
+                );
+                return;
+            }
+
+            try {
+                console.log("Fetching current position...");
+                const location = await Location.getCurrentPositionAsync({});
+                const currentCoords: Position = [
+                    location.coords.longitude,
+                    location.coords.latitude,
+                ];
+                console.log("Location fetched:", currentCoords);
+                setUserLocation(currentCoords);
+                setLocationError(null);
+
+                // Animate camera to user location
+                if (cameraRef.current) {
+                    cameraRef.current.setCamera({
+                        centerCoordinate: currentCoords,
+                        zoomLevel: 14,
+                        animationDuration: 1500,
+                    });
+                }
+            } catch (error) {
+                console.error("Location fetching error:", error);
+                setLocationError("Could not fetch location");
+                Alert.alert(
+                    "Location Error",
+                    "Could not fetch your current location."
+                );
+            }
+            setIsLoadingLocation(false);
+        })();
+    }, []);
+
+    if (isLoadingLocation) {
+        return (
+            <View style={[styles.container, styles.centerContent]}>
+                <ActivityIndicator size="large" />
+                <Text style={styles.infoText}>Fetching your location...</Text>
             </View>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Age</Text>
-              <Text className='text-xl font-semibold'>70</Text>
+        );
+    }
+
+    if (locationError && !userLocation) {
+        return (
+            <View style={[styles.container, styles.centerContent]}>
+                <Text style={styles.errorText}>Error: {locationError}</Text>
+                <Text style={styles.infoText}>Showing default map view.</Text>
             </View>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Species</Text>
-              <Text className='text-xl font-semibold'>Human</Text>
-            </View>
-          </View>
-        </CardContent>
-        <CardFooter className='flex-col gap-3 pb-0'>
-          <View className='flex-row items-center overflow-hidden'>
-            <Text className='text-sm text-muted-foreground'>Productivity:</Text>
-            <LayoutAnimationConfig skipEntering>
-              <Animated.View
-                key={progress}
-                entering={FadeInUp}
-                exiting={FadeOutDown}
-                className='w-11 items-center'
-              >
-                <Text className='text-sm font-bold text-sky-600'>{progress}%</Text>
-              </Animated.View>
-            </LayoutAnimationConfig>
-          </View>
-          <Progress value={progress} className='h-2' indicatorClassName='bg-sky-600' />
-          <View />
-          <Button
-            variant='outline'
-            className='shadow shadow-foreground/5'
-            onPress={updateProgressValue}
-          >
-            <Text>Update</Text>
-          </Button>
-        </CardFooter>
-      </Card>
-    </View>
-  );
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            {locationError && (
+                <Text style={styles.errorOverlay}>{locationError}</Text>
+            )}
+            <Mapbox.MapView
+                ref={mapRef}
+                style={styles.map}
+                styleURL={Mapbox.StyleURL.Street}
+                logoEnabled={false}
+                scaleBarEnabled={false}
+            >
+                <Mapbox.Camera
+                    ref={cameraRef}
+                    defaultSettings={{
+                        centerCoordinate: INITIAL_CENTER_COORDINATE,
+                        zoomLevel: 12,
+                    }}
+                />
+
+                {userLocation && (
+                    <Mapbox.PointAnnotation
+                        id="userLocation"
+                        coordinate={userLocation}
+                        title="Your Location"
+                    >
+                        <View style={styles.userLocationDot} />
+                    </Mapbox.PointAnnotation>
+                )}
+
+                {LONDON_LANDMARKS.map((landmark) => (
+                    <Mapbox.PointAnnotation
+                        key={landmark.id}
+                        id={landmark.id}
+                        coordinate={landmark.coordinate}
+                        title={landmark.title}
+                    >
+                        <View style={styles.markerContainer}>
+                            <View style={styles.markerPin} />
+                        </View>
+                    </Mapbox.PointAnnotation>
+                ))}
+            </Mapbox.MapView>
+        </View>
+    );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    centerContent: {
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    infoText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: "#666",
+        textAlign: "center",
+    },
+    errorText: {
+        color: "red",
+        fontWeight: "bold",
+        fontSize: 18,
+        textAlign: "center",
+        marginBottom: 10,
+    },
+    errorOverlay: {
+        position: "absolute",
+        top: 50,
+        left: 10,
+        right: 10,
+        backgroundColor: "rgba(255, 0, 0, 0.7)",
+        color: "white",
+        padding: 10,
+        borderRadius: 5,
+        textAlign: "center",
+        zIndex: 10,
+        fontWeight: "bold",
+    },
+    map: {
+        flex: 1,
+    },
+    userLocationDot: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: "blue",
+        borderWidth: 2,
+        borderColor: "white",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 1,
+        elevation: 2,
+    },
+    markerContainer: {
+        width: 30,
+        height: 30,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    markerPin: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: "red",
+        borderWidth: 1,
+        borderColor: "white",
+    },
+});

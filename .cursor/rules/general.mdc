@@ -24,6 +24,7 @@ alwaysApply: true
     *   `constants/` for static content/values.
     *   `types/` or colocated for type definitions.
     *   `store/` for state management (e.g., Zustand).
+    use yarn as package manager
 
 **Naming Conventions**
 
